@@ -8,6 +8,10 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.12"
+datasets = "^2.20.0"
+transformers = "^4.44.0"
+trl = "^0.9.6"
+unsloth = "^2024.8"
 
 
 [build-system]
