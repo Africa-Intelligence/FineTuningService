@@ -3,26 +3,22 @@ import os
 from transformers.integrations import WandbCallback
 from trl import SFTConfig, SFTTrainer
 from unsloth import FastLanguageModel
+from .dataset_processor import DatasetProcesser
+from dotenv import load_dotenv
+
+load_dotenv()
+assert "HF_API_KEY" in os.environ, "Please add your Hugging Face API key to the environment variables"
+
+dataset_names = [
+    'africa-intelligence/yahma-alpaca-cleaned-af',
+    'africa-intelligence/yahma-alpaca-cleaned-zu',
+    'africa-intelligence/yahma-alpaca-cleaned-xh',
+    'africa-intelligence/yahma-alpaca-cleaned-tn'
+]
+dataset_processor = DatasetProcesser(dataset_names)
+train_dataset, eval_dataset = dataset_processor.get_processed_train_eval_split(0.9)
 
 max_seq_length = 2048  # Supports automatic RoPE Scaling, so choose any number
-
-
-def prompt_no_input(row):
-    return ("Below is an instruction that describes a task. "
-            "Write a response that appropriately completes the request.\n\n"
-            "### Instruction:\n{instruction}\n\n### Response:\n{output}").format_map(row)
-
-
-def prompt_input(row):
-    return ("Below is an instruction that describes a task, paired with an input that provides further context. "
-            "Write a response that appropriately completes the request.\n\n"
-            "### Instruction:\n{instruction}\n\n### Input:\n{input}\n\n### Response:\n{output}").format_map(row)
-
-
-# TODO: update function to rather pre-process data first
-def create_alpaca_prompt(row):
-    return prompt_no_input(row) if row["input"] == "" else prompt_input(row)
-
 
 # Load model
 model, tokenizer = FastLanguageModel.from_pretrained(
@@ -75,6 +71,5 @@ trainer = SFTTrainer(
     packing=True,  # pack samples together for efficient training
     max_seq_length=1024,  # maximum packed length
     args=args,
-    callbacks=[WandbCallback()],
-    formatting_func=create_alpaca_prompt,
+    callbacks=[WandbCallback()]
 )
