@@ -50,4 +50,4 @@ class DatasetProcesser(object):
                     "### Instruction:\n{instruction}\n\n### Response:\n{output}").format_map(row)
         
         row['text'] = prompt_no_input(row) if row["input"] == "" else prompt_input(row)
-    
+        return row
