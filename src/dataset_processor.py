@@ -38,7 +38,7 @@ class DatasetProcesser(object):
         return dataset.rename_columns(column_mapping)
     
 
-    def __create_alpaca_prompt(row):
+    def __create_alpaca_prompt(self, row):
         def prompt_input(row):
             return ("Below is an instruction that describes a task, paired with an input that provides further context. "
                     "Write a response that appropriately completes the request.\n\n"
