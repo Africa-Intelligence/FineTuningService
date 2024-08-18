@@ -1,9 +1,10 @@
 import os
 
+from transformers import TrainingArguments
 from transformers.integrations import WandbCallback
 from trl import SFTConfig, SFTTrainer
-from unsloth import FastLanguageModel
-from .dataset_processor import DatasetProcesser
+from unsloth import FastLanguageModel, is_bfloat16_supported
+from dataset_processor import DatasetProcesser
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -52,17 +53,22 @@ model = FastLanguageModel.get_peft_model(
 os.environ["WANDB_PROJECT"] = "alpaca_ft"  # name your W&B project
 os.environ["WANDB_LOG_MODEL"] = "checkpoint"  # log all model checkpoints
 
-args = SFTConfig(
-    report_to="wandb",  # enables logging to W&B 😎
-    per_device_train_batch_size=16,
-    learning_rate=2e-4,
-    lr_scheduler_type="cosine",
-    num_train_epochs=3,
-    gradient_accumulation_steps=2,  # simulate larger batch sizes
-    output_dir="./output",
-    max_seq_length=max_seq_length,
-    dataset_text_field="text",
-)
+args = TrainingArguments(
+        per_device_train_batch_size = 2,
+        gradient_accumulation_steps = 4,
+        warmup_steps = 5,
+        # num_train_epochs = 1, # Set this for 1 full training run.
+        max_steps = 60,
+        learning_rate = 2e-4,
+        fp16 = not is_bfloat16_supported(),
+        bf16 = is_bfloat16_supported(),
+        logging_steps = 1,
+        optim = "adamw_8bit",
+        weight_decay = 0.01,
+        lr_scheduler_type = "linear",
+        seed = 3407,
+        output_dir = "outputs",
+    )
 
 trainer = SFTTrainer(
     model,
