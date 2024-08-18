@@ -13,8 +13,8 @@ assert "HF_API_KEY" in os.environ, "Please add your Hugging Face API key to the 
 dataset_names = [
     'africa-intelligence/yahma-alpaca-cleaned-af',
     'africa-intelligence/yahma-alpaca-cleaned-zu',
-    'africa-intelligence/yahma-alpaca-cleaned-xh',
-    'africa-intelligence/yahma-alpaca-cleaned-tn'
+    # 'africa-intelligence/yahma-alpaca-cleaned-xh',
+    # 'africa-intelligence/yahma-alpaca-cleaned-tn'
 ]
 dataset_processor = DatasetProcesser(dataset_names)
 train_dataset, eval_dataset = dataset_processor.get_processed_train_eval_split(0.9)
@@ -27,7 +27,7 @@ model, tokenizer = FastLanguageModel.from_pretrained(
     max_seq_length=max_seq_length,
     dtype=None,
     load_in_4bit=True,
-    token="hf_...",
+    token=os.environ["HF_API_KEY"],
 )
 
 # Do model patching and add fast LoRA weights
@@ -77,5 +77,8 @@ trainer = SFTTrainer(
     packing=True,  # pack samples together for efficient training
     max_seq_length=1024,  # maximum packed length
     args=args,
+    dataset_text_field="text",
     callbacks=[WandbCallback()]
 )
+
+trainer.train()
