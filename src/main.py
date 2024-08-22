@@ -6,34 +6,34 @@ from trl import SFTConfig, SFTTrainer
 from unsloth import FastLanguageModel, is_bfloat16_supported
 from dataset_processor import DatasetProcesser
 from dotenv import load_dotenv
+import yaml
 
 load_dotenv()
 assert "HF_API_KEY" in os.environ, "Please add your Hugging Face API key to the environment variables"
+script_dir = os.path.dirname(os.path.abspath(__file__))
+config_path = os.path.join(script_dir, 'config.yaml')
+with open(config_path, 'r') as config_file:
+    config = yaml.safe_load(config_file)
 
-dataset_names = [
-    'africa-intelligence/yahma-alpaca-cleaned-af',
-    'africa-intelligence/yahma-alpaca-cleaned-zu',
-    # 'africa-intelligence/yahma-alpaca-cleaned-xh',
-    # 'africa-intelligence/yahma-alpaca-cleaned-tn'
-]
+dataset_names = config['dataset_args']['dataset_names']
 dataset_processor = DatasetProcesser(dataset_names)
-train_dataset, eval_dataset = dataset_processor.get_processed_train_eval_split(0.9)
-
-max_seq_length = 2048  # Supports automatic RoPE Scaling, so choose any number
+train_dataset, eval_dataset = dataset_processor.get_processed_train_eval_split(
+    config['dataset_args']['train_split']
+)
 
 # Load model
 model, tokenizer = FastLanguageModel.from_pretrained(
-    model_name="meta-llama/Meta-Llama-3.1-8B",
-    max_seq_length=max_seq_length,
+    model_name=config['training_args']['model_name'],
     dtype=None,
     load_in_4bit=True,
+    token=os.environ["HF_API_KEY"],
     token=os.environ["HF_API_KEY"],
 )
 
 # Do model patching and add fast LoRA weights
 model = FastLanguageModel.get_peft_model(
     model,
-    r=16,
+    r=config['model_args']['lora_rank'],
     target_modules=[
         "q_proj",
         "k_proj",
@@ -43,29 +43,29 @@ model = FastLanguageModel.get_peft_model(
         "up_proj",
         "down_proj",
     ],
-    lora_alpha=16,
-    lora_dropout=0,  # Dropout = 0 is currently optimized
-    bias="none",  # Bias = "none" is currently optimized
+    lora_alpha=config['model_args']['lora_alpha'],
+    lora_dropout=config['model_args']['lora_dropout'], 
+    bias=config['model_args']['bias'],
     use_gradient_checkpointing=True,
     random_state=3407,
 )
 
-os.environ["WANDB_PROJECT"] = "alpaca_ft"  # name your W&B project
-os.environ["WANDB_LOG_MODEL"] = "checkpoint"  # log all model checkpoints
+os.environ['WANDB_PROJECT'] = 'llama3.1-8b-alpaca-fine-tuning'
+os.environ['WANDB_LOG_MODEL'] = 'checkpoint'
 
 args = TrainingArguments(
-        per_device_train_batch_size = 2,
-        gradient_accumulation_steps = 4,
-        warmup_steps = 5,
-        # num_train_epochs = 1, # Set this for 1 full training run.
-        max_steps = 60,
-        learning_rate = 2e-4,
+        per_device_train_batch_size = config['training_args']['batch_size'],
+        gradient_accumulation_steps = config['training_args']['gradient_accumulation_steps'],
+        warmup_steps = config['training_args']['warmup_steps'],
+        num_train_epochs = config['training_args']['epochs'],
+        max_steps = config['training_args']['max_steps'],
+        learning_rate = config['training_args']['learning_rate'],
         fp16 = not is_bfloat16_supported(),
         bf16 = is_bfloat16_supported(),
-        logging_steps = 1,
-        optim = "adamw_8bit",
-        weight_decay = 0.01,
-        lr_scheduler_type = "linear",
+        logging_steps = config['training_args']['logging_steps'],
+        optim = config['training_args']['optimizer'],
+        weight_decay = config['training_args']['weight_decay'],
+        lr_scheduler_type = config['training_args']['lr_scheduler_type'],
         seed = 3407,
         output_dir = "outputs",
     )
@@ -75,7 +75,7 @@ trainer = SFTTrainer(
     train_dataset=train_dataset,
     eval_dataset=eval_dataset,
     packing=True,  # pack samples together for efficient training
-    max_seq_length=1024,  # maximum packed length
+    max_seq_length=config['dataset_args']['max_seq_length'],
     args=args,
     dataset_text_field="text",
     callbacks=[WandbCallback()]
