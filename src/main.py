@@ -2,7 +2,7 @@ import os
 
 from transformers import TrainingArguments
 from transformers.integrations import WandbCallback
-from trl import SFTConfig, SFTTrainer
+from trl import SFTTrainer
 from unsloth import FastLanguageModel, is_bfloat16_supported
 from dataset_processor import DatasetProcesser
 from dotenv import load_dotenv
@@ -68,6 +68,13 @@ args = TrainingArguments(
         lr_scheduler_type = config['training_args']['lr_scheduler_type'],
         seed = 3407,
         output_dir = "outputs",
+        evaluation_strategy=config['training_args']['evaluation_strategy'],
+        eval_steps=config['training_args']['eval_steps'],
+        save_strategy=config['training_args']['save_strategy'],
+        save_steps=config['training_args']['save_steps'],
+        save_total_limit=config['training_args']['save_total_limit'],
+        load_best_model_at_end=config['training_args']['load_best_model_at_end'],
+        metric_for_best_model=config['training_args']['metric_for_best_model'],
     )
 
 trainer = SFTTrainer(
