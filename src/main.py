@@ -23,10 +23,9 @@ train_dataset, eval_dataset = dataset_processor.get_processed_train_eval_split(
 
 # Load model
 model, tokenizer = FastLanguageModel.from_pretrained(
-    model_name=config['training_args']['model_name'],
+    model_name=config['model_args']['model_name'],
     dtype=None,
     load_in_4bit=True,
-    token=os.environ["HF_API_KEY"],
     token=os.environ["HF_API_KEY"],
 )
 
@@ -54,11 +53,10 @@ os.environ['WANDB_PROJECT'] = 'llama3.1-8b-alpaca-fine-tuning'
 os.environ['WANDB_LOG_MODEL'] = 'checkpoint'
 
 args = TrainingArguments(
-        per_device_train_batch_size = config['training_args']['batch_size'],
+        per_device_train_batch_size = config['training_args']['per_device_train_batch_size'],
         gradient_accumulation_steps = config['training_args']['gradient_accumulation_steps'],
         warmup_steps = config['training_args']['warmup_steps'],
         num_train_epochs = config['training_args']['epochs'],
-        max_steps = config['training_args']['max_steps'],
         learning_rate = config['training_args']['learning_rate'],
         fp16 = not is_bfloat16_supported(),
         bf16 = is_bfloat16_supported(),
@@ -74,10 +72,10 @@ trainer = SFTTrainer(
     model,
     train_dataset=train_dataset,
     eval_dataset=eval_dataset,
-    packing=True,  # pack samples together for efficient training
+    packing=config['dataset_args']['packing'],  # pack samples together for efficient training
     max_seq_length=config['dataset_args']['max_seq_length'],
     args=args,
-    dataset_text_field="text",
+    dataset_text_field=config['dataset_args']['text_field'],
     callbacks=[WandbCallback()]
 )
 

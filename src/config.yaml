@@ -5,7 +5,9 @@ dataset_args:
     - africa-intelligence/yahma-alpaca-cleaned-xh
     - africa-intelligence/yahma-alpaca-cleaned-tn
   train_split: 0.9
+  packing: True
   max_seq_length: 2048
+  text_field: text
 
 model_args:
   model_name: meta-llama/Meta-Llama-3.1-8B
@@ -15,11 +17,10 @@ model_args:
   bias: none
 
 training_args:
-  batch_size: 2
+  per_device_train_batch_size: 2
   gradient_accumulation_steps: 4
   warmup_steps: 5
   epochs: 2
-  max_steps: 60
   learning_rate: 2.0e-4
   logging_steps: 1
   optimizer: adamw_8bit
