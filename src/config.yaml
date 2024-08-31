@@ -26,14 +26,10 @@ training_args:
   optimizer: adamw_8bit
   weight_decay: 0.01
   lr_scheduler_type: linear
-
-eval_args:
-  per_device_eval_batch_size: 2
-  logging_steps: 2
-  eval_strategy: "steps"
-  eval_steps: 2  # Evaluate every 10 steps
+  evaluation_strategy: "steps"
+  eval_steps: 10  # Evaluate every 500 steps
   save_strategy: "steps"
-  save_steps: 2  # Save a checkpoint every 10 steps
+  save_steps: 10  # Save a checkpoint every 500 steps
   save_total_limit: 3  # Keep only the last 3 checkpoints
   load_best_model_at_end: true
   metric_for_best_model: "loss"  # Or another metric if you have a specific one
