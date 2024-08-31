@@ -1,12 +1,12 @@
 dataset_args:
   dataset_names:
     - africa-intelligence/yahma-alpaca-cleaned-af
-    - africa-intelligence/yahma-alpaca-cleaned-zu
-    - africa-intelligence/yahma-alpaca-cleaned-xh
-    - africa-intelligence/yahma-alpaca-cleaned-tn
-  train_split: 0.9
+    # - africa-intelligence/yahma-alpaca-cleaned-zu
+    # - africa-intelligence/yahma-alpaca-cleaned-xh
+    # - africa-intelligence/yahma-alpaca-cleaned-tn
+  train_split: 0.99
   packing: True
-  max_seq_length: 2048
+  max_seq_length: 248
   text_field: text
 
 model_args:
@@ -17,19 +17,22 @@ model_args:
   bias: none
 
 training_args:
-  per_device_train_batch_size: 2
-  gradient_accumulation_steps: 4
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 1
   warmup_steps: 5
   epochs: 2
   learning_rate: 2.0e-4
-  logging_steps: 1
   optimizer: adamw_8bit
   weight_decay: 0.01
   lr_scheduler_type: linear
-  evaluation_strategy: "steps"
-  eval_steps: 10  # Evaluate every 500 steps
+
+eval_args:
+  per_device_eval_batch_size: 2
+  logging_steps: 2
+  eval_strategy: "steps"
+  eval_steps: 2  # Evaluate every 10 steps
   save_strategy: "steps"
-  save_steps: 10  # Save a checkpoint every 500 steps
+  save_steps: 2  # Save a checkpoint every 10 steps
   save_total_limit: 3  # Keep only the last 3 checkpoints
   load_best_model_at_end: true
   metric_for_best_model: "loss"  # Or another metric if you have a specific one
