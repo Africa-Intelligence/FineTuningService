@@ -15,6 +15,8 @@ class DatasetProcesser(object):
             datasets.append(dataset) 
 
         concatenated_dataset = concatenate_datasets(datasets)
+        test_dataset = concatenated_dataset.remove_columns(['input', 'output'])
+        test_dataset = test_dataset.rename_column('instruction', 'text')
         concatenated_dataset = concatenated_dataset.map(self.__create_alpaca_prompt)
         concatenated_dataset = concatenated_dataset.remove_columns(['instruction', 'input', 'output'])
 
@@ -22,7 +24,7 @@ class DatasetProcesser(object):
         assert 0 <= train_percent <= 1, "Split (train percent) must be between 0 and 1"
         dataset_dict = concatenated_dataset.train_test_split(train_size=train_percent, shuffle=True)
 
-        return (dataset_dict['train'], dataset_dict['test'])
+        return (dataset_dict['train'], dataset_dict['test'], test_dataset)
 
     def __load_dataset(self, dataset_name: str) -> datasets.Dataset:
         return load_dataset(dataset_name, split='train')
