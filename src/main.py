@@ -76,10 +76,11 @@ model = PeftModelForCausalLM(
     peft_config=lora_config
 )
 
-os.environ['WANDB_PROJECT'] = 'llama3.1-8b-Instruct-alpaca-fine-tuning'
+project_name = config['model_args']['model_name'] + 'alpaca-fine-tuning'
+os.environ['WANDB_PROJECT'] = project_name
 os.environ['WANDB_LOG_MODEL'] = 'checkpoint'
 # wandb stuff
-wandb.init(project='llama3.1-8b-Instruct-alpaca-fine-tuning', 
+wandb.init(project=project_name, 
             entity='africa-intelligence', 
             job_type="train",
             tags=['8b', 'hf_sft'],
