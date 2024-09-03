@@ -4,7 +4,6 @@ from transformers import GenerationConfig
 import wandb
 from tqdm import tqdm
 import torch
-from unsloth import FastLanguageModel
 
 class LLMSampleCB(WandbCallback):
     def __init__(self, trainer, test_dataset, num_samples=10, max_new_tokens=256, log_model="checkpoint"):
@@ -36,18 +35,5 @@ class LLMSampleCB(WandbCallback):
     def on_evaluate(self, args, state, control, **kwargs):
         """Log the wandb.Table after calling trainer.evaluate"""
         super().on_evaluate(args, state, control, **kwargs)
-
-        # Switch to inference mode
-        self.original_model = self.trainer.model
-        self.trainer.model = FastLanguageModel.for_inference(self.trainer.model)
-        self.model = self.trainer.model  # Update the local model reference
-
         records_table = self.samples_table(self.sample_dataset)
         self._wandb.log({"sample_predictions": records_table})
-        print("evaluate callback called")
-
-        # Switch back to training mode
-        self.trainer.model = self.original_model
-        self.model = self.trainer.model  # Update the local model reference
-
-        return control
