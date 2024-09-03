@@ -16,7 +16,7 @@ load_dotenv()
 assert "HF_API_KEY" in os.environ, "Please add your Hugging Face API key to the environment variables"
 login(token=os.environ["HF_API_KEY"])
 assert "WANDB_API_KEY" in os.environ, "Please add your Weights and Biases API key to the environment variables"
-wandb.login(token=os.environ["WANDB_API_KEY"])
+wandb.login(key=os.environ["WANDB_API_KEY"])
 script_dir = os.path.dirname(os.path.abspath(__file__))
 config_path = os.path.join(script_dir, 'config.yaml')
 with open(config_path, 'r') as config_file:
@@ -76,11 +76,10 @@ model = PeftModelForCausalLM(
     peft_config=lora_config
 )
 
-project_name = config['model_args']['model_name'] + 'alpaca-fine-tuning'
-os.environ['WANDB_PROJECT'] = project_name
+os.environ['WANDB_PROJECT'] = config['eval_args']['project_name']
 os.environ['WANDB_LOG_MODEL'] = 'checkpoint'
 # wandb stuff
-wandb.init(project=project_name, 
+wandb.init(project=config['eval_args']['project_name'], 
             entity='africa-intelligence', 
             job_type="train",
             tags=['8b', 'hf_sft'],
