@@ -6,7 +6,7 @@ dataset_args:
     - africa-intelligence/yahma-alpaca-cleaned-tn
   train_split: 0.99
   packing: True
-  max_seq_length: 2048
+  max_seq_length: 256
   text_field: text
 
 model_args:
